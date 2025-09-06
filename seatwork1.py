@@ -12,6 +12,7 @@ class OrderService:
     
     def placeOrder(self,productId, quantity):
         product = self.productRepository.findById(productId)
+        
 
 #Infrastructure Layer (DB/API)
 class ProductRepository:
