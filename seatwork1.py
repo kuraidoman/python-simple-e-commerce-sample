@@ -1,33 +1,49 @@
-#Domain Layer (Entities)
+# Domain Layer (Entities)
 class Product:
     def __init__(self, id, name, price):
         self.id = id
         self.name = name
         self.price = price
 
-#Application Layer (Use Cases)
-class OrderService:
-    def __init__(self, productRepository):
-        self.productRespository = productRepository
-    
-    def placeOrder(self,productId, quantity):
-        product = self.productRepository.findById(productId)
-        
 
-#Infrastructure Layer (DB/API)
+# Infrastructure Layer (Repository)
 class ProductRepository:
-    def __init__(self, db):
-        self.db = db
+    def __init__(self, products):
+        self.products = products
     
     def findById(self, id):
-        return self.db.find(lambda product: product.id == id)
+        for product in self.products:
+            if product.id == id:
+                return product
+        return None
 
-#Presentation Layer (UI/Controllers)
+
+# Application Layer (Use Cases)
+class OrderService:
+    def __init__(self, productRepository):
+        self.productRepository = productRepository
+    
+    def placeOrder(self, productId, quantity):
+        product = self.productRepository.findById(productId)
+        if not product:
+            raise Exception("Product not found")
+        else:
+            totalPrice = product.price * quantity
+            return {
+                "product": product.name,
+                "quantity": quantity,
+                "totalPrice": totalPrice
+            }
 
 
+def placeOrderController(req, res):
+    productId = req['body']['productId']
+    quantity = req['body']['quantity']
+    orderService = OrderService(ProductRepository(products))
+    order = orderService.placeOrder(productId, quantity)
+    res.send(order)
 
 
-#An array of product objects
 products = [
     Product(1, "Laptop", 1200),
     Product(2, "Mouse", 25),
@@ -36,10 +52,19 @@ products = [
     Product(5, "Webcam", 50),
 ]
 
-#Function to display the products
+
 def display_products(product_list):
     for product in product_list:
         print(f"ID: {product.id}, Name: {product.name}, Price ${product.price}")
 
-#Display the products
+
+class Response:
+    def send(self, data):
+        print("Response:", data)
+
+
 display_products(products)
+
+req = {"body": {"productId": 2, "quantity": 3}}
+res = Response()
+placeOrderController(req, res)
